@@ -4,12 +4,15 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <errno.h>
+#include <stdio.h>
+#include <string.h>
+#include <unistd.h>
 using namespace std;
 
 /*parser mime type file*/
 
 
-const char *ext_map = "mime.types";
+const char *ext_map = "/etc/mime.types";
 static map<string, string> ext_mime_map;
 
 void parse_mime_map_line(const char* start, const char* end)
@@ -18,7 +21,7 @@ void parse_mime_map_line(const char* start, const char* end)
 	strncpy(line, start, end - start);
 	line[end - start] = '\0';
 	char* l = line;
-#define DELIME " \t\n\r"
+#define DELIMS " \t\n\r"
 	while(isspace(*l)) 
 		l++;
 	char *mime = strsep(&l, DELIMS);
@@ -79,4 +82,18 @@ done:
 	free(buf);
 	close(fd);
 	return ret;
+}
+const char* rgw_find_mime_by_ext(string& ext)
+{
+    map<string, string>::iterator iter = ext_mime_map.find(ext);
+    if (iter == ext_mime_map.end())
+        return NULL;
+    return iter->second.c_str();
+}
+int main()
+{
+    int ret =  mime_map_init(ext_map);
+    string dcm = "dcm";
+    printf("%s\n", rgw_find_mime_by_ext(dcm));
+    return 0;
 }
