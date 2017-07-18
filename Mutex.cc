@@ -1,7 +1,7 @@
 #include <string>
 #include "Mutex.h"
 
-Mutex::Mutex(const char *n, bool r, bool ld, bool bt):
+Mutex::Mutex(const char *n, bool r, bool ld, bool bt)
 {
     pthread_mutexattr_t attr;
     pthread_mutexattr_init(&attr);
