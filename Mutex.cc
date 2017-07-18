@@ -19,20 +19,8 @@ void Mutex::Lock(bool no_lockdep)
 out:
 	;
 }
-void Mutex::Unlock() {
-	_pre_unlock();
-	int r = pthread_mutex_unlock(&_m);
-	assert(r == 0);
-}
 Mutex::~Mutex() {
     assert(nlock == 0);
     pthread_mutex_destroy(&_m);
 }
-void Mutex::Lock(bool no_lockdep) {
-    if (TryLock()) {
-        return;
-    }
-    int r = pthread_mutex_lock(&_m);
-    assert(r == 0);
-}      
 

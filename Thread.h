@@ -3,7 +3,6 @@
 
 #include <pthread.h>
 #include <sys/types.h>
-using namespace std;
 class Thread {
 private:
     pthread_t thread_id;
