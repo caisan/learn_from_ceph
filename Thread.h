@@ -2,6 +2,7 @@
 #define THREAD_H
 
 #include <pthread.h>
+#include <stdio.h>
 #include <sys/types.h>
 class Thread {
 private:
