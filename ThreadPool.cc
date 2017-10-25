@@ -11,6 +11,9 @@
 #include <sys/types.h>
 #include <sys/syscall.h> /* For SYS_xxx definitions */
 #include "ThreadPool.h"
+#include "page.h"
+
+using namespace std;
 
 Thread::Thread()
     : thread_id(0),
@@ -102,4 +105,73 @@ int Thread::join(void **prval)
 int Thread::detach()
 {
     return pthread_detach(thread_id);
+}
+
+//Thread Pool impl
+ThreadPool::TheadPool(string nm, int n, const char *option)
+	: name(nm),
+	_stop(false),
+	_pause(0),
+	_num_threads(n),
+	last_work_queue(0),
+	processing(0)
+{
+	if (option) {
+		//TODO
+	}
+}
+
+ThreadPool::~ThreadPool()
+{
+	assert(_threads.empty());
+}
+
+void ThreadPool::start()
+{
+	std::cout<<"start"<<std::endl;
+	start_threads();
+	std::cout<<"started"<<std::endl;
+}
+
+void ThreadPool::start_threads()
+{
+	while (_threads.size() < _num_threads) {
+		WorkThread *wt = new WorkThread(this);
+		std::cout<<"start_threads createing and statring"<<std::endl;
+		_threads.insert(wt);
+
+		wt->create();
+	}
+}
+
+void ThreadPool::worker(WorkThread *wt)
+{
+	std::cout<<"worker start"<<std::endl;
+	std::stringstream ss;
+	ss << name << " thread " << (void *)pthread_self();
+	while (!_stop) {
+		if (_pause && !work_queues.empty()) {
+			WorkQueue_* wq;
+			int tries = work_queues.size();
+			bool did = false;
+			while(tries--) {
+				last_work_queue++;
+				last_work_queue %= work_queues.size();
+				wq = work_queue[last_work_queue];
+
+				void *item = wq->_void_dequeue();
+				if (item) {
+					processing++;
+					std::cout<<"worker wq "<< wq->name << " start processing "<<std::endl;
+					wq->_void_process(item);
+					wq->_void_process_finish(item);
+					processing--;
+					did = true;
+				}
+			}
+			if (did)
+				continue;
+		}
+	}
+	std::cout<<"worker stopping"<<std::endl;
 }
