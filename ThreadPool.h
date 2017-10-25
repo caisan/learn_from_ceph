@@ -1,0 +1,45 @@
+#ifndef THREAD_POOL_H
+#define THREAD_POOL_H
+
+#include <pthread.h>
+
+class Thread {
+    private:
+        pthread_t thread_id;
+        pid_t pid;
+        int ioprio_class, ioprio_priority;
+
+        void *entry_wrapper();
+
+    public:
+        Thread(const Thread& other);
+        const Thread& operator=(const Thread& other);
+
+        Thread();
+        virtual ~Thread();
+
+    protected:
+        virtual void *entry() = 0;
+
+    private:
+        static void *_entry_func(void *arg);
+
+    public:
+        const pthread_t &get_thread_id();
+        bool is_started();
+        bool am_self();
+        int kill(int signal);
+        int try_create(size_t stacksize);
+        void create(size_t stacksize = 0);
+        int join(void **prval = 0);
+        int detach();
+        int set_ioprio(int cls, int prio);
+};
+
+
+
+
+
+
+#endif
+
