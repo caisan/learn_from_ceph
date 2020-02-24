@@ -17,3 +17,8 @@ hash函数,表查找:http://burtleburtle.net/bob/hash/evahash.html
 没有了任务,线程也就失去了意义.两者紧密相关,也正是因为关系密切,在ceph中,两者的代码都位于WorkQueue.cc和WorkQueue.h,    
 此处是将ceph线程池以及工作队列的代码提取出来    
 ```tp_test.cc```是线程池的试验测试代码
+
+
+### 3. callback_class_function.cc
+
+一个demo用于研究ceph中的回调机制。
