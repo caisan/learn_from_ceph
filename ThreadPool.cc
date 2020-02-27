@@ -1,4 +1,5 @@
 #include <assert.h>
+#include <stdio.h>
 #include <dirent.h>
 #include <unistd.h>
 #include <errno.h>
@@ -11,7 +12,7 @@
 #include <sys/types.h>
 #include <sys/syscall.h> /* For SYS_xxx definitions */
 #include "ThreadPool.h"
-#include "page.h"
+//#include "page.h"
 
 using namespace std;
 
@@ -65,6 +66,7 @@ int Thread::kill(int signal)
 int Thread::try_create(size_t stacksize)
 {
     pthread_attr_t *thread_attr = NULL;
+    /*
     stacksize &= _PAGE_MASK;
     if (stacksize) {
         thread_attr = (pthread_attr_t *)malloc(sizeof(pthread_attr_t));
@@ -73,6 +75,7 @@ int Thread::try_create(size_t stacksize)
         pthread_attr_init(thread_attr);
         pthread_attr_setstacksize(thread_attr, stacksize);
     }
+*/
     int r;
     r = pthread_create(&thread_id, thread_attr, _entry_func, (void*)this);
 
@@ -106,9 +109,17 @@ int Thread::detach()
 {
     return pthread_detach(thread_id);
 }
-
+void *Thread::_entry_func(void *arg) {
+    void *r = ((Thread*)arg)->entry_wrapper();
+    return r;
+}
+/*
+void *Thread::entry_wrapper()
+{
+    return entry();
+}*/
 //Thread Pool impl
-ThreadPool::TheadPool(string nm, int n, const char *option)
+ThreadPool::ThreadPool(string nm, int n)
 	: name(nm),
 	_stop(false),
 	_pause(0),
@@ -116,9 +127,6 @@ ThreadPool::TheadPool(string nm, int n, const char *option)
 	last_work_queue(0),
 	processing(0)
 {
-	if (option) {
-		//TODO
-	}
 }
 
 ThreadPool::~ThreadPool()
@@ -140,7 +148,7 @@ void ThreadPool::start_threads()
 		std::cout<<"start_threads createing and statring"<<std::endl;
 		_threads.insert(wt);
 
-		wt->create();
+		wt->create(20);
 	}
 }
 
@@ -150,21 +158,21 @@ void ThreadPool::worker(WorkThread *wt)
 	std::stringstream ss;
 	ss << name << " thread " << (void *)pthread_self();
 	while (!_stop) {
-		if (_pause && !work_queues.empty()) {
+		if (!_pause && !work_queues.empty()) {
 			WorkQueue_* wq;
 			int tries = work_queues.size();
 			bool did = false;
 			while(tries--) {
 				last_work_queue++;
 				last_work_queue %= work_queues.size();
-				wq = work_queue[last_work_queue];
+				wq = work_queues[last_work_queue];
 
 				void *item = wq->_void_dequeue();
 				if (item) {
 					processing++;
-					std::cout<<"worker wq "<< wq->name << " start processing "<<std::endl;
+					std::cout<<"worker wq:"<< wq->name << " start processing "<<std::endl;
 					wq->_void_process(item);
-					wq->_void_process_finish(item);
+					//wq->_void_process_finish(item);
 					processing--;
 					did = true;
 				}
@@ -174,4 +182,15 @@ void ThreadPool::worker(WorkThread *wt)
 		}
 	}
 	std::cout<<"worker stopping"<<std::endl;
+}
+
+void ThreadPool::stop(bool clear_after)
+{
+  std::cout<<"worker thread stop"<<std::endl;
+  _stop = true;
+  for(set<WorkThread*>::iterator p = _threads.begin();p!=_threads.end(); ++p){
+    (*p)->join();
+    delete *p;
+  }
+  _stop = false;
 }

@@ -18,6 +18,11 @@ hash函数,表查找:http://burtleburtle.net/bob/hash/evahash.html
 此处是将ceph线程池以及工作队列的代码提取出来    
 ```tp_test.cc```是线程池的试验测试代码
 
+To build tp_test.cc:
+```g++ ThreadPool.cc ThreadPool_test.cc -o tp_test -lpthread -std=c++11```
+
+With boost::function (install boost lib firstly)
+```g++ ThreadPool.cc ThreadPool_test.cc -o tp_test -I /usr/local/include -L /usr/local/lib -lpthread -std=c++11```
 
 ### 3. callback_class_function.cc
 
